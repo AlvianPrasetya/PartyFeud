@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -46,7 +45,7 @@ public class FeudController : MonoBehaviour {
 		timer.StartCountdown();
 	}
 
-	private void Start() {
+	void Start() {
 		feuds = new Queue<Feud>();
 		using (StreamReader reader = new StreamReader(@"/Users/prasetyaa/test_feuds.csv")) {
 			Feud feud = null;
