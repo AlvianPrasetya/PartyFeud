@@ -34,5 +34,9 @@ MonoBehaviour:
   - RespawnSpaceship
   - Begin
   - RPCBegin
+  - RPCStartGame
+  - RPCNextRound
+  - RPCNextSubround
+  - RPCToggleTeam
   DisableAutoOpenWizard: 1
   ShowSettings: 1
