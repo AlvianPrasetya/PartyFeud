@@ -1,10 +1,12 @@
 ﻿using ExitGames.Client.Photon;
 using Photon.Pun;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 
 [Serializable]
 public struct Feud {
@@ -45,32 +47,56 @@ public struct AnswerScore {
 }
 
 public class FeudController : MonoBehaviourPunCallbacks {
-	public static FeudController instance;
+	private enum FeudState {
+		Idle, Ready, Play, Wait
+	}
+	
 	public Timer timer;
 	public Question question;
+	public Button nextButton;
 	public Answer[] answers;
-	public Team[] teams;
+	public TeamController teamController;
+	public AudioSource sfx;
+	public AudioClip reveal;
+	public AudioClip wrong;
 	private Queue<Feud> feuds;
+	private FeudState state;
+	private int numUnanswered;
 
-	public void NextRound() {
-		if (feuds.Count != 0) {
-			photonView.RPC("RPCNextRound", RpcTarget.All, feuds.Dequeue());
+	public void Next() {
+		switch (state) {
+			case FeudState.Idle:
+				state = FeudState.Wait;
+				NextRound();
+				break;
+			case FeudState.Ready:
+				state = FeudState.Wait;
+				StartCoroutine(StartRoundCoroutine());
+				break;
+			case FeudState.Play:
+				state = FeudState.Wait;
+				WrongAnswer();
+				break;
+			default:
+				break;
 		}
 	}
 
-	public void NextSubround() {
-		photonView.RPC("RPCNextSubround", RpcTarget.All);
-	}
-
-	public void ToggleTeam(int index) {
-		photonView.RPC("RPCToggleTeam", RpcTarget.All, index);
+	public void RevealAnswer(int index) {
+		sfx.PlayOneShot(reveal);
+		photonView.RPC("RPCRevealAnswer", RpcTarget.All, index);
+		teamController.NextTeam();
+		numUnanswered--;
+		if (numUnanswered == 0) {
+			state = FeudState.Idle;
+		} else {
+			state = FeudState.Play;
+		}
 	}
 
 	void Awake() {
 		PhotonPeer.RegisterType(typeof(Feud), 0, Feud.Serialize, Feud.Deserialize);
 		PhotonPeer.RegisterType(typeof(AnswerScore), 1, AnswerScore.Serialize, AnswerScore.Deserialize);
-
-		instance = this;
 
 		feuds = new Queue<Feud>();
 		using (StreamReader reader = new StreamReader(@"./feuds.csv")) {
@@ -98,28 +124,68 @@ public class FeudController : MonoBehaviourPunCallbacks {
 						break;
 				}
 			}
+			// Flush last feud (if any)
+			if (answerScores != null) {
+				feuds.Enqueue(new Feud(question, answerScores));
+			}
 		}
+	}
+
+	void Start() {
+		if (PhotonNetwork.IsMasterClient) {
+			nextButton.gameObject.SetActive(true);
+		}
+		NextRound();
 	}
 
 	[PunRPC]
 	private void RPCNextRound(Feud feud) {
 		question.Set(feud.question);
 		for (int i = 0; i < feud.answerScores.Length; i++) {
-			answers[i].Set(feud.answerScores[i].answer, feud.answerScores[i].score);
+			answers[i].Set(feud.answerScores[i].answer, feud.answerScores[i].score, PhotonNetwork.IsMasterClient);
 		}
 		for (int i = feud.answerScores.Length; i < answers.Length; i++) {
 			answers[i].Unset();
 		}
+
+		numUnanswered = answers.Length;
+		state = FeudState.Ready;
 	}
 
 	[PunRPC]
-	private void RPCNextSubround() {
-		timer.StopCountdown();
-		timer.StartCountdown();
+	private void RPCRevealAnswer(int index) {
+		if (PhotonNetwork.IsMasterClient) {
+			StartCoroutine(answers[index].Hide());
+		} else {
+			StartCoroutine(answers[index].Reveal());
+		}
 	}
 
-	[PunRPC]
-	private void RPCToggleTeam(int index) {
-		teams[index].TogglePlaying();
+	private void NextRound() {
+		if (feuds.Count != 0) {
+			photonView.RPC("RPCNextRound", RpcTarget.All, feuds.Dequeue());
+			teamController.Reset();
+		}
+	}
+
+	private void StartRound() {
+		StartCoroutine(StartRoundCoroutine());
+	}
+
+	private IEnumerator StartRoundCoroutine() {
+		yield return timer.CountDown(10);
+		yield return teamController.SelectTeamRandom();
+		state = FeudState.Play;
+	}
+
+	private void WrongAnswer() {
+		sfx.PlayOneShot(wrong);
+		int numPlayingTeams = teamController.Eliminate();
+		teamController.NextTeam();
+		if (numPlayingTeams == 0) {
+			state = FeudState.Idle;
+		} else {
+			state = FeudState.Play;
+		}
 	}
 }

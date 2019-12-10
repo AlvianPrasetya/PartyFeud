@@ -4,20 +4,29 @@ using UnityEngine.UI;
 public class Team : MonoBehaviour {
 	public Image image;
 	public Text text;
-	private bool isPlaying;
+	public bool isPlaying;
+	public int score;
 
-	public void TogglePlaying() {
-		isPlaying = !isPlaying;
-		if (isPlaying) {
-			image.color = new Color(1.0f, 1.0f, 1.0f);
-			text.gameObject.SetActive(true);
-		} else {
-			image.color = new Color(0.5f, 0.5f, 0.5f);
-			text.gameObject.SetActive(false);
-		}
+	public void Highlight() {
+		image.color = new Color(1.0f, 1.0f, 1.0f);
+	}
+
+	public void Unhighlight() {
+		image.color = new Color(0.75f, 0.75f, 0.75f);
+	}
+
+	public void Eliminate() {
+		isPlaying = false;
+		gameObject.SetActive(false);
+	}
+
+	public void Uneliminate() {
+		isPlaying = true;
+		gameObject.SetActive(true);
 	}
 
 	void Awake() {
+		score = 0;
 		isPlaying = true;
 	}
 }

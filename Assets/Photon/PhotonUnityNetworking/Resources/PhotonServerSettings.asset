@@ -38,5 +38,10 @@ MonoBehaviour:
   - RPCNextRound
   - RPCNextSubround
   - RPCToggleTeam
+  - RPCHighlight
+  - RPCUnhighlight
+  - RPCEliminate
+  - RPCRevealAnswer
+  - RPCReset
   DisableAutoOpenWizard: 1
   ShowSettings: 1

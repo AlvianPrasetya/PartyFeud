@@ -8,7 +8,6 @@ public class NetworkController : MonoBehaviourPunCallbacks {
 	public Text debugText;
 	public Button startButton;
 	public AudioSource bgm;
-	private bool isInRoom;
 
 	public override void OnConnectedToMaster() {
 		debugText.text = "Joining random room";
@@ -19,7 +18,6 @@ public class NetworkController : MonoBehaviourPunCallbacks {
 
 	public override void OnJoinedRoom() {
 		debugText.text = string.Format("Joined room {0}", PhotonNetwork.CurrentRoom.Name);
-		isInRoom = true;
 
 		if (PhotonNetwork.IsMasterClient) {
 			DebugNumClients(PhotonNetwork.CurrentRoom.Players.Count - 1);
