@@ -7,8 +7,13 @@ public class Answer : MonoBehaviour {
 	public Image bar;
 	public Text answerText;
 	public Text scoreText;
+	public int score {
+		get; private set;
+	}
 
 	public void Set(string answer, int score, bool revealed = false) {
+		this.score = score;
+
 		answerText.text = answer;
 		scoreText.text = score.ToString();
 		gameObject.SetActive(true);
@@ -37,10 +42,10 @@ public class Answer : MonoBehaviour {
 	}
 
 	public IEnumerator Hide() {
+		button.interactable = false;
 		yield return new WaitForSeconds(0.5f);
 		answerText.gameObject.SetActive(false);
 		scoreText.gameObject.SetActive(false);
 		bar.color = new Color(1.0f, 1.0f, 1.0f);
-		button.interactable = false;
 	}
 }

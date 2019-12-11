@@ -1,8 +1,9 @@
+using Photon.Pun;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Timer : MonoBehaviour {
+public class Timer : MonoBehaviourPunCallbacks {
 	public Text timerText;
 	public AudioSource sfx;
 	public AudioClip tick;
@@ -12,7 +13,12 @@ public class Timer : MonoBehaviour {
 		for (int i = startTime-1; i >= 0; i--) {
 			yield return new WaitForSecondsRealtime(1);
 			sfx.PlayOneShot(tick);
-			timerText.text = i.ToString();
+			photonView.RPC("RPCSetTime", RpcTarget.All, i);
 		}
+	}
+
+	[PunRPC]
+	private void RPCSetTime(int time) {
+		timerText.text = time.ToString();
 	}
 }

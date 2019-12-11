@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -61,6 +62,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	public AudioClip wrong;
 	private Queue<Feud> feuds;
 	private FeudState state;
+	private Mutex wait = new Mutex();
 	private int numUnanswered;
 
 	public void Next() {
@@ -83,8 +85,14 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	}
 
 	public void RevealAnswer(int index) {
+		if (state != FeudState.Play) {
+			return;
+		}
+		state = FeudState.Wait;
+
 		sfx.PlayOneShot(reveal);
 		photonView.RPC("RPCRevealAnswer", RpcTarget.All, index);
+		teamController.AddScore(index, answers[index].score);
 		teamController.NextTeam();
 		numUnanswered--;
 		if (numUnanswered == 0) {
@@ -147,9 +155,6 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		for (int i = feud.answerScores.Length; i < answers.Length; i++) {
 			answers[i].Unset();
 		}
-
-		numUnanswered = answers.Length;
-		state = FeudState.Ready;
 	}
 
 	[PunRPC]
@@ -163,8 +168,11 @@ public class FeudController : MonoBehaviourPunCallbacks {
 
 	private void NextRound() {
 		if (feuds.Count != 0) {
-			photonView.RPC("RPCNextRound", RpcTarget.All, feuds.Dequeue());
+			Feud feud = feuds.Dequeue();
+			photonView.RPC("RPCNextRound", RpcTarget.All, feud);
 			teamController.Reset();
+			numUnanswered = feud.answerScores.Length;
+			state = FeudState.Ready;
 		}
 	}
 

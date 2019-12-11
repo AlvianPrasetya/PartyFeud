@@ -58,6 +58,10 @@ public class TeamController : MonoBehaviourPunCallbacks {
 		return --numPlayingTeams;
 	}
 
+	public void AddScore(int index, int score) {
+		teams[index].score += score;
+	}
+
 	[PunRPC]
 	private void RPCReset() {
 		foreach (Team team in teams) {
