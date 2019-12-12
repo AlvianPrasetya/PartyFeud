@@ -3,9 +3,9 @@ using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,7 +49,7 @@ public struct AnswerScore {
 
 public class FeudController : MonoBehaviourPunCallbacks {
 	private enum FeudState {
-		Idle, Ready, Play, Wait
+		ToLoad, Ready, Play, Wait, ToStandings, Standings
 	}
 	
 	public Timer timer;
@@ -67,7 +67,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 
 	public void Next() {
 		switch (state) {
-			case FeudState.Idle:
+			case FeudState.ToLoad:
 				state = FeudState.Wait;
 				NextRound();
 				break;
@@ -96,7 +96,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		teamController.NextTeam();
 		numUnanswered--;
 		if (numUnanswered == 0) {
-			state = FeudState.Idle;
+			state = FeudState.ToStandings;
 		} else {
 			state = FeudState.Play;
 		}
@@ -191,7 +191,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		int numPlayingTeams = teamController.Eliminate();
 		teamController.NextTeam();
 		if (numPlayingTeams == 0) {
-			state = FeudState.Idle;
+			state = FeudState.ToStandings;
 		} else {
 			state = FeudState.Play;
 		}
