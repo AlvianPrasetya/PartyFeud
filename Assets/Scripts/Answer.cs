@@ -20,7 +20,7 @@ public class Answer : MonoBehaviour {
 		if (revealed) {
 			answerText.gameObject.SetActive(true);
 			scoreText.gameObject.SetActive(true);
-			bar.color = new Color(0.375f, 1.0f, 1.0f);
+			bar.color = new Color(0.125f, 1.0f, 1.0f);
 			button.interactable = true;
 		} else {
 			answerText.gameObject.SetActive(false);
@@ -38,7 +38,7 @@ public class Answer : MonoBehaviour {
 		yield return new WaitForSeconds(0.5f);
 		answerText.gameObject.SetActive(true);
 		scoreText.gameObject.SetActive(true);
-		bar.color = new Color(0.375f, 1.0f, 1.0f);
+		bar.color = new Color(0.125f, 1.0f, 1.0f);
 	}
 
 	public IEnumerator Hide() {
