@@ -48,6 +48,8 @@ public class NetworkController : MonoBehaviourPunCallbacks {
 	public void StartGame() {
 		debugText.text = "Starting game";
 		StartCoroutine(StartGameCoroutine());
+		PhotonNetwork.CurrentRoom.IsOpen = false;
+		PhotonNetwork.CurrentRoom.IsVisible = false;
 	}
 
 	void Start() {

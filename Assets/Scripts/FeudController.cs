@@ -64,6 +64,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	private FeudState state;
 	private Mutex wait = new Mutex();
 	private int numUnanswered;
+	private Coroutine timerCoroutine;
 
 	public void Next() {
 		switch (state) {
@@ -95,11 +96,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		teamController.AddScore(index, answers[index].score);
 		teamController.NextTeam();
 		numUnanswered--;
-		if (numUnanswered == 0) {
-			state = FeudState.ToStandings;
-		} else {
-			state = FeudState.Play;
-		}
+		NextSubround();
 	}
 
 	void Awake() {
@@ -188,12 +185,22 @@ public class FeudController : MonoBehaviourPunCallbacks {
 
 	private void WrongAnswer() {
 		sfx.PlayOneShot(wrong);
-		int numPlayingTeams = teamController.Eliminate();
+		teamController.Eliminate();
 		teamController.NextTeam();
-		if (numPlayingTeams == 0) {
-			state = FeudState.ToStandings;
+		NextSubround();
+	}
+
+	private void NextSubround() {
+		if (timerCoroutine != null) {
+			StopCoroutine(timerCoroutine);
+			timerCoroutine = null;
+		}
+		
+		if (numUnanswered == 0 || teamController.numPlayingTeams == 0) {
+			state = FeudState.ToLoad;
 		} else {
 			state = FeudState.Play;
+			timerCoroutine = StartCoroutine(timer.CountDown(3));
 		}
 	}
 }
