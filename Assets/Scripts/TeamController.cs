@@ -1,6 +1,6 @@
 using Photon.Pun;
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TeamController : MonoBehaviourPunCallbacks {
@@ -19,7 +19,7 @@ public class TeamController : MonoBehaviourPunCallbacks {
 	}
 
 	public IEnumerator SelectTeamRandom() {
-		playingTeamIndex = Random.Range(0, 10);
+		playingTeamIndex = UnityEngine.Random.Range(0, 10);
 		int steps = 5 * teams.Length + playingTeamIndex;
 
 		for (int i = 0; i < steps - 10; i++) {
@@ -62,6 +62,10 @@ public class TeamController : MonoBehaviourPunCallbacks {
 		teams[index].score += score;
 	}
 
+	public void ShowStandings() {
+		photonView.RPC("RPCShowStandings", RpcTarget.All);
+	}
+
 	[PunRPC]
 	private void RPCReset() {
 		foreach (Team team in teams) {
@@ -84,5 +88,26 @@ public class TeamController : MonoBehaviourPunCallbacks {
 	[PunRPC]
 	private void RPCEliminate(int index) {
 		teams[index].Eliminate();
+	}
+
+	[PunRPC]
+	private void RPCShowStandings() {
+		int minScore = Int32.MaxValue, maxScore = 0;
+		foreach (Team team in teams) {
+			minScore = Mathf.Min(minScore, team.score);
+			maxScore = Mathf.Max(maxScore, team.score);
+		}
+		int rangeScore = maxScore - minScore;
+
+		foreach (Team team in teams) {
+			team.image.rectTransform.sizeDelta = new Vector2(
+				team.image.rectTransform.sizeDelta.x,
+				(team.score - minScore) * 730 / rangeScore + 350
+			);
+		}
+	}
+
+	private IEnumerator ShowStandingsCoroutine() {
+		yield return null;
 	}
 }

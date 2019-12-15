@@ -44,5 +44,6 @@ MonoBehaviour:
   - RPCRevealAnswer
   - RPCReset
   - RPCSetTime
+  - RPCShowStandings
   DisableAutoOpenWizard: 1
   ShowSettings: 1

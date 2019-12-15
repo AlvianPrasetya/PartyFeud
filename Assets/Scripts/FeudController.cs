@@ -80,6 +80,11 @@ public class FeudController : MonoBehaviourPunCallbacks {
 				state = FeudState.Wait;
 				WrongAnswer();
 				break;
+			case FeudState.ToStandings:
+				state = FeudState.Wait;
+				teamController.Reset();
+				teamController.ShowStandings();
+				break;
 			default:
 				break;
 		}
@@ -93,7 +98,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 
 		sfx.PlayOneShot(reveal);
 		photonView.RPC("RPCRevealAnswer", RpcTarget.All, index);
-		teamController.AddScore(index, answers[index].score);
+		teamController.AddScore(teamController.playingTeamIndex, answers[index].score);
 		teamController.NextTeam();
 		numUnanswered--;
 		NextSubround();
@@ -180,7 +185,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	private IEnumerator StartRoundCoroutine() {
 		yield return timer.CountDown(10);
 		yield return teamController.SelectTeamRandom();
-		state = FeudState.Play;
+		NextSubround();
 	}
 
 	private void WrongAnswer() {
@@ -197,7 +202,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		}
 		
 		if (numUnanswered == 0 || teamController.numPlayingTeams == 0) {
-			state = FeudState.ToLoad;
+			state = FeudState.ToStandings;
 		} else {
 			state = FeudState.Play;
 			timerCoroutine = StartCoroutine(timer.CountDown(3));
