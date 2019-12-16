@@ -104,6 +104,9 @@ public class TeamController : MonoBehaviourPunCallbacks {
 			team.Highlight();
 		}
 		int rangeScore = maxScore - minScore;
+		if (rangeScore == 0) {
+			rangeScore = Int32.MaxValue;
+		}
 
 		for (float progress = 0; progress < 1; progress = Mathf.Min(1, progress + Time.deltaTime / 2)) {
 			foreach (Team team in teams) {
