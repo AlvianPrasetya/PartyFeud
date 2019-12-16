@@ -9,12 +9,23 @@ public class Timer : MonoBehaviourPunCallbacks {
 	public AudioClip tick;
 
 	public IEnumerator CountDown(int startTime) {
-		timerText.text = startTime.ToString();
-		for (int i = startTime-1; i >= 0; i--) {
+		photonView.RPC("RPCReveal", RpcTarget.All);
+		for (int i = startTime; i > 0; i--) {
+			photonView.RPC("RPCSetTime", RpcTarget.All, i);
 			yield return new WaitForSecondsRealtime(1);
 			sfx.PlayOneShot(tick);
-			photonView.RPC("RPCSetTime", RpcTarget.All, i);
 		}
+		photonView.RPC("RPCHide", RpcTarget.All);
+	}
+
+	[PunRPC]
+	private void RPCReveal() {
+		gameObject.SetActive(true);
+	}
+
+	[PunRPC]
+	private void RPCHide() {
+		gameObject.SetActive(false);
 	}
 
 	[PunRPC]

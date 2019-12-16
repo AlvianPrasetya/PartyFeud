@@ -49,7 +49,7 @@ public struct AnswerScore {
 
 public class FeudController : MonoBehaviourPunCallbacks {
 	private enum FeudState {
-		ToLoad, Ready, Play, Wait, ToStandings, Standings
+		ToLoad, Ready, Play, Wait, RevealAnswers, ToStandings
 	}
 	
 	public Timer timer;
@@ -82,8 +82,13 @@ public class FeudController : MonoBehaviourPunCallbacks {
 				break;
 			case FeudState.ToStandings:
 				state = FeudState.Wait;
+				question.Unset();
+				foreach (Answer answer in answers) {
+					answer.Unset();
+				}
 				teamController.Reset();
 				teamController.ShowStandings();
+				state = FeudState.ToLoad;
 				break;
 			default:
 				break;
@@ -91,17 +96,25 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	}
 
 	public void RevealAnswer(int index) {
-		if (state != FeudState.Play) {
+		if (state != FeudState.Play && state != FeudState.RevealAnswers) {
 			return;
 		}
-		state = FeudState.Wait;
 
 		sfx.PlayOneShot(reveal);
 		photonView.RPC("RPCRevealAnswer", RpcTarget.All, index);
-		teamController.AddScore(teamController.playingTeamIndex, answers[index].score);
-		teamController.NextTeam();
 		numUnanswered--;
-		NextSubround();
+		switch (state) {
+			case FeudState.Play:
+				teamController.AddScore(teamController.playingTeamIndex, answers[index].score);
+				teamController.NextTeam();
+				NextSubround();
+				break;
+			case FeudState.RevealAnswers:
+				if (numUnanswered == 0) {
+					state = FeudState.ToStandings;
+				}
+				break;
+		}
 	}
 
 	void Awake() {
@@ -201,8 +214,10 @@ public class FeudController : MonoBehaviourPunCallbacks {
 			timerCoroutine = null;
 		}
 		
-		if (numUnanswered == 0 || teamController.numPlayingTeams == 0) {
+		if (numUnanswered == 0) {
 			state = FeudState.ToStandings;
+		} else if (teamController.numPlayingTeams == 0) {
+			state = FeudState.RevealAnswers;
 		} else {
 			state = FeudState.Play;
 			timerCoroutine = StartCoroutine(timer.CountDown(3));

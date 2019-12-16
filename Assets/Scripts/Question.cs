@@ -6,5 +6,10 @@ public class Question : MonoBehaviour {
 
 	public void Set(string question) {
 		questionText.text = question;
+		gameObject.SetActive(true);
+	}
+
+	public void Unset() {
+		gameObject.SetActive(false);
 	}
 }

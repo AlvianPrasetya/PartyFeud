@@ -71,6 +71,7 @@ public class TeamController : MonoBehaviourPunCallbacks {
 		foreach (Team team in teams) {
 			team.Uneliminate();
 			team.Unhighlight();
+			team.HideScore();
 		}
 		numPlayingTeams = teams.Length;
 	}
@@ -92,22 +93,27 @@ public class TeamController : MonoBehaviourPunCallbacks {
 
 	[PunRPC]
 	private void RPCShowStandings() {
+		StartCoroutine(ShowStandingsCoroutine());
+	}
+
+	private IEnumerator ShowStandingsCoroutine() {
 		int minScore = Int32.MaxValue, maxScore = 0;
 		foreach (Team team in teams) {
 			minScore = Mathf.Min(minScore, team.score);
 			maxScore = Mathf.Max(maxScore, team.score);
+			team.Highlight();
 		}
 		int rangeScore = maxScore - minScore;
 
-		foreach (Team team in teams) {
-			team.image.rectTransform.sizeDelta = new Vector2(
-				team.image.rectTransform.sizeDelta.x,
-				(team.score - minScore) * 730 / rangeScore + 350
-			);
+		for (float progress = 0; progress < 1; progress = Mathf.Min(1, progress + Time.deltaTime / 2)) {
+			foreach (Team team in teams) {
+				float progressScore = Mathf.Lerp(0, team.score, progress);
+				team.ShowScore((float)(progressScore - minScore) / rangeScore, (int) progressScore);
+			}
+			yield return null;
 		}
-	}
-
-	private IEnumerator ShowStandingsCoroutine() {
-		yield return null;
+		foreach (Team team in teams) {
+			team.ShowScore((float)(team.score - minScore) / rangeScore, team.score);
+		}
 	}
 }
