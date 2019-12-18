@@ -5,6 +5,7 @@ public class Team : MonoBehaviour {
 	public Image image;
 	public Text text;
 	public Text scoreText;
+	public Image crown;
 	public bool isPlaying;
 	public int score;
 
@@ -56,6 +57,11 @@ public class Team : MonoBehaviour {
 			scoreText.rectTransform.anchoredPosition.x,
 			-230
 		);
+	}
+
+	public void Win() {
+		image.color = new Color(0.5f, 1.0f, 0.0f);
+		crown.gameObject.SetActive(true);
 	}
 
 	void Awake() {

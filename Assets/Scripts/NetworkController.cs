@@ -1,4 +1,5 @@
-﻿using Photon.Pun;
+﻿using ExitGames.Client.Photon;
+using Photon.Pun;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,6 +11,8 @@ public class NetworkController : MonoBehaviourPunCallbacks {
 	public AudioSource bgm;
 
 	public override void OnConnectedToMaster() {
+		PhotonPeer.RegisterType(typeof(Feud), 0, Feud.Serialize, Feud.Deserialize);
+		PhotonPeer.RegisterType(typeof(AnswerScore), 1, AnswerScore.Serialize, AnswerScore.Deserialize);
 		debugText.text = "Joining random room";
 		if (!PhotonNetwork.JoinRandomRoom()) {
 			debugText.text = "Failed to join random room";

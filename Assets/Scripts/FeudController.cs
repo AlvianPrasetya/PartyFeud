@@ -1,5 +1,4 @@
-﻿using ExitGames.Client.Photon;
-using Photon.Pun;
+﻿using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -49,7 +48,7 @@ public struct AnswerScore {
 
 public class FeudController : MonoBehaviourPunCallbacks {
 	private enum FeudState {
-		ToLoad, Ready, Play, Wait, RevealAnswers, ToStandings
+		ToLoad, Ready, Play, Wait, RevealAnswers, ToStandings, ToReset
 	}
 	
 	public Timer timer;
@@ -58,6 +57,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	public Answer[] answers;
 	public Image wrongIcon;
 	public TeamController teamController;
+	public AudioSource bgm;
 	public AudioSource sfx;
 	public AudioClip reveal;
 	public AudioClip wrong;
@@ -84,12 +84,19 @@ public class FeudController : MonoBehaviourPunCallbacks {
 				break;
 			case FeudState.ToStandings:
 				state = FeudState.Wait;
-				question.Unset();
-				foreach (Answer answer in answers) {
-					answer.Unset();
-				}
+				photonView.RPC("RPCResetRound", RpcTarget.All);
 				teamController.Reset();
 				teamController.ShowStandings();
+				timer.Hide();
+				if (roundIndex == 1) {
+					state = FeudState.ToReset;
+				} else {
+					state = FeudState.ToLoad;
+				}
+				break;
+			case FeudState.ToReset:
+				state = FeudState.Wait;
+				teamController.ResetStandings();
 				state = FeudState.ToLoad;
 				break;
 			default:
@@ -120,47 +127,47 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	}
 
 	void Awake() {
-		PhotonPeer.RegisterType(typeof(Feud), 0, Feud.Serialize, Feud.Deserialize);
-		PhotonPeer.RegisterType(typeof(AnswerScore), 1, AnswerScore.Serialize, AnswerScore.Deserialize);
-
-		feuds = new Queue<Feud>();
-		using (StreamReader reader = new StreamReader(@"./feuds.csv")) {
-			string question = "";
-			List<AnswerScore> answerScores = null;
-			while (!reader.EndOfStream) {
-				string line = reader.ReadLine();
-				string[] values = line.Split(',');
-				switch (values.Length) {
-					case 1:
-						// New question, flush old feud (if any)
-						if (answerScores != null) {
-							feuds.Enqueue(new Feud(question, answerScores));
-						}
-						// Create new feud
-						question = values[0];
-						answerScores = new List<AnswerScore>();
-						break;
-					case 2:
-						string answer = values[0];
-						int score = Int32.Parse(values[1]);
-						answerScores.Add(new AnswerScore(answer, score));
-						break;
-					default:
-						break;
+		if (PhotonNetwork.IsMasterClient) {
+			feuds = new Queue<Feud>();
+			using (StreamReader reader = new StreamReader(@"./feuds.csv")) {
+				string question = "";
+				List<AnswerScore> answerScores = null;
+				while (!reader.EndOfStream) {
+					string line = reader.ReadLine();
+					string[] values = line.Split(',');
+					switch (values.Length) {
+						case 1:
+							// New question, flush old feud (if any)
+							if (answerScores != null) {
+								feuds.Enqueue(new Feud(question, answerScores));
+							}
+							// Create new feud
+							question = values[0];
+							answerScores = new List<AnswerScore>();
+							break;
+						case 2:
+							string answer = values[0];
+							int score = Int32.Parse(values[1]);
+							answerScores.Add(new AnswerScore(answer, score));
+							break;
+						default:
+							break;
+					}
 				}
-			}
-			// Flush last feud (if any)
-			if (answerScores != null) {
-				feuds.Enqueue(new Feud(question, answerScores));
+				// Flush last feud (if any)
+				if (answerScores != null) {
+					feuds.Enqueue(new Feud(question, answerScores));
+				}
 			}
 		}
 	}
 
 	void Start() {
 		if (PhotonNetwork.IsMasterClient) {
+			bgm.Play();
 			nextButton.gameObject.SetActive(true);
+			state = FeudState.ToLoad;
 		}
-		NextRound();
 	}
 
 	[PunRPC]
@@ -171,6 +178,14 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		}
 		for (int i = feud.answerScores.Length; i < answers.Length; i++) {
 			answers[i].Unset();
+		}
+	}
+
+	[PunRPC]
+	private void RPCResetRound() {
+		question.Unset();
+		foreach (Answer answer in answers) {
+			answer.Unset();
 		}
 	}
 
@@ -195,6 +210,9 @@ public class FeudController : MonoBehaviourPunCallbacks {
 			teamController.Reset();
 			numUnanswered = feud.answerScores.Length;
 			state = FeudState.Ready;
+			roundIndex++;
+		} else {
+			teamController.ShowWinner();
 		}
 	}
 
@@ -204,7 +222,15 @@ public class FeudController : MonoBehaviourPunCallbacks {
 
 	private IEnumerator StartRoundCoroutine() {
 		yield return timer.CountDown(10);
-		yield return teamController.SelectTeamRandom();
+		if (roundIndex == 1) {
+			// Demo round, select first team to start
+			yield return teamController.SelectTeam(0);
+		} else if (roundIndex <= teamController.teams.Length + 1) {
+			// First 10 rounds, select starting team in sequence
+			yield return teamController.SelectTeam(roundIndex - 2);
+		} else {
+			yield return teamController.SelectTeamRandom();
+		}
 		NextSubround();
 	}
 

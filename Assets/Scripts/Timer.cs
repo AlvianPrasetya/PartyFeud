@@ -18,6 +18,10 @@ public class Timer : MonoBehaviourPunCallbacks {
 		photonView.RPC("RPCHide", RpcTarget.All);
 	}
 
+	public void Hide() {
+		photonView.RPC("RPCHide", RpcTarget.All);
+	}
+
 	[PunRPC]
 	private void RPCReveal() {
 		gameObject.SetActive(true);

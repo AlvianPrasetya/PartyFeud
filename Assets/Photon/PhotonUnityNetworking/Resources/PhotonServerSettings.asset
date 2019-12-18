@@ -32,21 +32,20 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
-  - Begin
-  - RPCBegin
-  - RPCStartGame
-  - RPCNextRound
-  - RPCNextSubround
-  - RPCToggleTeam
-  - RPCHighlight
-  - RPCUnhighlight
   - RPCEliminate
-  - RPCRevealAnswer
+  - RPCHide
+  - RPCHighlight
+  - RPCNextRound
   - RPCReset
+  - RPCReveal
+  - RPCRevealAnswer
   - RPCSetTime
   - RPCShowStandings
-  - RPCHide
-  - RPCReveal
+  - RPCStartGame
+  - RPCUnhighlight
   - RPCWrongAnswer
+  - RPCResetRound
+  - RPCResetStandings
+  - RPCShowWinner
   DisableAutoOpenWizard: 1
   ShowSettings: 1
