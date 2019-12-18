@@ -47,5 +47,6 @@ MonoBehaviour:
   - RPCShowStandings
   - RPCHide
   - RPCReveal
+  - RPCWrongAnswer
   DisableAutoOpenWizard: 1
   ShowSettings: 1

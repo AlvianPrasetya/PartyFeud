@@ -56,6 +56,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	public Question question;
 	public Button nextButton;
 	public Answer[] answers;
+	public Image wrongIcon;
 	public TeamController teamController;
 	public AudioSource sfx;
 	public AudioClip reveal;
@@ -65,6 +66,7 @@ public class FeudController : MonoBehaviourPunCallbacks {
 	private Mutex wait = new Mutex();
 	private int numUnanswered;
 	private Coroutine timerCoroutine;
+	private int roundIndex;
 
 	public void Next() {
 		switch (state) {
@@ -181,6 +183,11 @@ public class FeudController : MonoBehaviourPunCallbacks {
 		}
 	}
 
+	[PunRPC]
+	private void RPCWrongAnswer() {
+		StartCoroutine(WrongAnswerCoroutine());
+	}
+
 	private void NextRound() {
 		if (feuds.Count != 0) {
 			Feud feud = feuds.Dequeue();
@@ -203,9 +210,30 @@ public class FeudController : MonoBehaviourPunCallbacks {
 
 	private void WrongAnswer() {
 		sfx.PlayOneShot(wrong);
+		photonView.RPC("RPCWrongAnswer", RpcTarget.All);
 		teamController.Eliminate();
 		teamController.NextTeam();
 		NextSubround();
+	}
+
+	private IEnumerator WrongAnswerCoroutine() {
+		yield return new WaitForSeconds(0.5f);
+		wrongIcon.gameObject.SetActive(true);
+		for (float progress = 0; progress < 1; progress = Mathf.Min(1, progress + Time.deltaTime*2)) {
+			wrongIcon.rectTransform.sizeDelta = new Vector2(
+				360 + progress * 120,
+				360 + progress * 120
+			);
+			yield return null;
+		}
+		for (float progress = 0; progress < 1; progress = Mathf.Min(1, progress + Time.deltaTime*2)) {
+			wrongIcon.rectTransform.sizeDelta = new Vector2(
+				480 - progress * 120,
+				480 - progress * 120
+			);
+			yield return null;
+		}
+		wrongIcon.gameObject.SetActive(false);
 	}
 
 	private void NextSubround() {

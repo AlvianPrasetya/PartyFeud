@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class Answer : MonoBehaviour {
 	public Button button;
 	public Image bar;
+	public Text numberText;
 	public Text answerText;
 	public Text scoreText;
 	public int score {
@@ -18,11 +19,13 @@ public class Answer : MonoBehaviour {
 		scoreText.text = score.ToString();
 		gameObject.SetActive(true);
 		if (revealed) {
+			numberText.gameObject.SetActive(false);
 			answerText.gameObject.SetActive(true);
 			scoreText.gameObject.SetActive(true);
 			bar.color = new Color(0.125f, 1.0f, 1.0f);
 			button.interactable = true;
 		} else {
+			numberText.gameObject.SetActive(true);
 			answerText.gameObject.SetActive(false);
 			scoreText.gameObject.SetActive(false);
 			bar.color = new Color(1.0f, 1.0f, 1.0f);
@@ -36,6 +39,7 @@ public class Answer : MonoBehaviour {
 
 	public IEnumerator Reveal() {
 		yield return new WaitForSeconds(0.5f);
+		numberText.gameObject.SetActive(false);
 		answerText.gameObject.SetActive(true);
 		scoreText.gameObject.SetActive(true);
 		bar.color = new Color(0.125f, 1.0f, 1.0f);
@@ -44,6 +48,7 @@ public class Answer : MonoBehaviour {
 	public IEnumerator Hide() {
 		button.interactable = false;
 		yield return new WaitForSeconds(0.5f);
+		numberText.gameObject.SetActive(true);
 		answerText.gameObject.SetActive(false);
 		scoreText.gameObject.SetActive(false);
 		bar.color = new Color(1.0f, 1.0f, 1.0f);
