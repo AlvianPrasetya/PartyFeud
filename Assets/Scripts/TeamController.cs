@@ -89,7 +89,7 @@ public class TeamController : MonoBehaviourPunCallbacks {
 		sfx.PlayOneShot(applause);
 		int winningTeamIndex = 0;
 		for (int i = 1; i < teams.Length; i++) {
-			if (teams[i].score > winningTeamIndex) {
+			if (teams[i].score > teams[winningTeamIndex].score) {
 				winningTeamIndex = i;
 			}
 		}
